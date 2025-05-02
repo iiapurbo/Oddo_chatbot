@@ -1,6 +1,4 @@
-streamlit==1.26.0
-requests==2.31.0
-pandas==2.0.3
-pillow==10.0.1
-reportlab==4.0.4
-uuid==1.30
+streamlit
+requests
+pandas
+reportlab
