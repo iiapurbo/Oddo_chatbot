@@ -13,6 +13,9 @@ st.set_page_config(page_title="Syncoria AI-powered Chatbot", page_icon="🤖")
 # Title
 st.title("🤖 Syncoria AI-powered Chatbot")
 
+# Define welcome message once
+WELCOME_MESSAGE = "Hello! I'm your Business Insights Assistant—what business metric can I fetch for you today?"
+
 # Initialize session state
 if "session_id" not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
@@ -20,7 +23,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "assistant",
-            "content": "Hello! I'm your Business Insights Assistant—what business metric can I fetch for you today?"
+            "content": WELCOME_MESSAGE
         }
     ]
 if "results" not in st.session_state:
@@ -41,18 +44,14 @@ def format_message(content):
     # Replace newlines with HTML line breaks for proper rendering in markdown
     return content.replace('\n', '\n\n')
 
-# Chat container
-chat_container = st.container()
-
 # Display chat history
-with chat_container:
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else None):
-            # Use unsafe_allow_html to render the HTML line breaks
-            if msg["role"] == "assistant" and "<br>" in msg["content"]:
-                st.markdown(msg["content"], unsafe_allow_html=True)
-            else:
-                st.markdown(msg["content"])
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else None):
+        # Use unsafe_allow_html to render the HTML line breaks
+        if msg["role"] == "assistant" and "<br>" in msg["content"]:
+            st.markdown(msg["content"], unsafe_allow_html=True)
+        else:
+            st.markdown(msg["content"])
 
 # Chat input at the bottom
 user_input = st.chat_input("Type your response...")
@@ -60,15 +59,10 @@ user_input = st.chat_input("Type your response...")
 if user_input:
     # Add user message to history
     st.session_state.messages.append({"role": "user", "content": user_input})
-
-    # Rerender chat history with new user message
-    with chat_container:
-        for msg in st.session_state.messages:
-            with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else None):
-                if msg["role"] == "assistant" and "<br>" in msg["content"]:
-                    st.markdown(msg["content"], unsafe_allow_html=True)
-                else:
-                    st.markdown(msg["content"])
+    
+    # Display the user message immediately
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
     # Make API call to the external API endpoint
     try:
@@ -77,8 +71,7 @@ if user_input:
             # Use the correct request format based on the Postman collection
             payload = {
                 "question": user_input
-                # Note: We could add session_id here if the API supports it
-                # "session_id": st.session_state.session_id
+                # "session_id": st.session_state.session_id  # Uncomment if the API supports it
             }
 
             response = requests.post(
@@ -87,7 +80,7 @@ if user_input:
             )
             response.raise_for_status()
             response_data = response.json()
-
+            
             # Extract the assistant's response from the correct path in the response
             assistant_response = "No response text available"
             if response_data.get("result") == True and "message" in response_data:
@@ -100,28 +93,24 @@ if user_input:
 
             # Add assistant response to history
             st.session_state.messages.append({"role": "assistant", "content": formatted_response})
-
-        # Rerender chat with the assistant's response
-        with chat_container:
-            for msg in st.session_state.messages:
-                with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else None):
-                    if msg["role"] == "assistant" and "<br>" in msg["content"]:
-                        st.markdown(msg["content"], unsafe_allow_html=True)
-                    else:
-                        st.markdown(msg["content"])
+            
+            # Display the assistant's message
+            with st.chat_message("assistant", avatar="🤖"):
+                if "<br>" in formatted_response:
+                    st.markdown(formatted_response, unsafe_allow_html=True)
+                else:
+                    st.markdown(formatted_response)
 
     except requests.RequestException as e:
         st.error(f"Error connecting to the API: {e}")
-
-    # Rerun to update the UI
-    st.rerun()
+        # Don't add error message to chat history
 
 # Clear chat history
 if st.button("Clear Chat"):
     st.session_state.messages = [
         {
             "role": "assistant",
-            "content": "Hello! I'm your Business Insights Assistant—what business metric can I fetch for you today?"
+            "content": WELCOME_MESSAGE
         }
     ]
     st.session_state.session_id = str(uuid.uuid4())
