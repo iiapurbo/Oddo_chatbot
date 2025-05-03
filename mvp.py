@@ -110,7 +110,7 @@ if user_input:
 
 # Handle assistant response
 if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
-    with st.spinner("The answer is being generated..."):
+    with st.spinner("Analysing..."):
         payload = {"question": st.session_state.messages[-1]["content"]}
         try:
             response = requests.post(
