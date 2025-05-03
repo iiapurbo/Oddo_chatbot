@@ -5,7 +5,7 @@ import uuid
 # Set page configuration
 st.set_page_config(page_title="Syncoria AI-powered Chatbot", page_icon="🤖")
 
-# Define custom CSS
+# Define custom CSS with updated .chat-title color
 st.markdown("""
 <style>
 .assistant-container {
@@ -47,7 +47,7 @@ st.markdown("""
     margin: 0;
 }
 .chat-title {
-    color: white;
+    color: var(--text-color);  # Updated to use theme's text color
     padding: 20px 0;
     text-align: center;
     margin-bottom: 20px;
@@ -110,7 +110,7 @@ if user_input:
 
 # Handle assistant response
 if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
-    with st.spinner("Analyzing..."):
+    with st.spinner("The answer is being generated..."):
         payload = {"question": st.session_state.messages[-1]["content"]}
         try:
             response = requests.post(
